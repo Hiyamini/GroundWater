@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>DWLR Groundwater Prototype – Canva Code</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
+
+  <style>
+    :root {
+      --safe: #10b981;      /* teal */
+      --moderate: #f59e0b;  /* amber */
+      --critical: #ef4444;  /* red */
+      --ink: #0f172a;       /* slate-900-like */
+    }
+
+    
+
+body {
+  overflow-x: hidden;
+}
+#view-trends {
+  height: auto;
+  max-height: none;
+  overflow: visible;
+}
+
+#view-trends {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+
+    html, body { height: 100%; }
+    body { font-family: 'Inter', system-ui, -apple-system, Segoe UI, Roboto, 'Helvetica Neue', Arial; }
+    /* Subtle glass card */
+    .glass {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.15);
+    }
+    .status-dot { width: 10px; height: 10px; border-radius: 9999px; display:inline-block; }
+    /* Simple fade-in */
+    .fade-in { animation: fade 300ms ease-out; }
+    @keyframes fade { from {opacity: 0; transform: translateY(4px)} to {opacity:1; transform: translateY(0)} }
+    /* Prevent text selection during drag on charts */
+    svg { user-select: none; -webkit-user-select: none; }
+    
+    /* Fix button focus and active states */
+    .role-tab:focus, .role-tab:active {
+      outline: none !important;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.3) !important;
+    }
+    
+    .tab-btn:focus, .tab-btn:active {
+      outline: none !important;
+      box-shadow: 0 0 0 2px rgba(255,255,255,0.3) !important;
+    }
+    
+    .role-tab:not(.role-tab-active):focus,
+    .role-tab:not(.role-tab-active):active {
+      background: rgba(255,255,255,0.15) !important;
+      color: white !important;
+    }
+    
+    .tab-btn:not(.tab-btn-active):focus,
+    .tab-btn:not(.tab-btn-active):active {
+      background: rgba(255,255,255,0.15) !important;
+      color: rgba(255,255,255,0.9) !important;
+    }
+    
+    button:focus {
+      outline: none !important;
+    }
+    
+    /* Remove default button styling */
+    button {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background: transparent;
+    }
+    
+    /* Prevent white flash on mobile tap */
+    button, .role-tab, .tab-btn {
+      -webkit-tap-highlight-color: transparent !important;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    /* Ensure proper button transitions */
+    .role-tab, .tab-btn {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    /* Override Tailwind's default button behavior */
+    .tab-btn:hover:not(.tab-btn-active) {
+      background: rgba(255,255,255,0.1) !important;
+    }
+    
+    .role-tab:hover:not(.role-tab-active) {
+      background: rgba(255,255,255,0.1) !important;
+    }
+    
+    /* Remove default button styling */
+    button {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      border: none;
+      background: transparent;
+    }
+    
+    /* Prevent white flash on mobile tap */
+    button, .role-tab, .tab-btn {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+    
+    /* Ensure proper button transitions */
+    .role-tab, .tab-btn {
+      transition: all 0.2s ease-in-out;
+    }
+    
+    /* Fix initial active state in HTML */
+    .role-tab.active {
+      background: white !important;
+      color: #0f172a !important;
+    }
+    
+    /* Prevent any white background on click/focus for non-active buttons */
+    .tab-btn:not(.tab-btn-active):active,
+    .role-tab:not(.role-tab-active):active {
+      background: rgba(255,255,255,0.15) !important;
+      color: white !important;
+    }
+    
+    /* Strong override for all button states */
+    button:not(.bg-white):active,
+    button:not(.bg-white):focus {
+      background: rgba(255,255,255,0.1) !important;
+      color: inherit !important;
+    }
+    
+    /* Specifically target tab and role buttons */
+    .tab-btn:active, .tab-btn:focus {
+      background: rgba(255,255,255,0.1) !important;
+    }
+    
+    .role-tab:active, .role-tab:focus {
+      background: rgba(255,255,255,0.1) !important;
+    }
+    
+    /* Override for active buttons only */
+    .tab-btn-active, .role-tab-active {
+      background: white !important;
+      color: #0f2a18 !important;
+    }
+    
+    /* Global override to prevent any white backgrounds */
+    button:not([class*="bg-white"]):not(.tab-btn-active):not(.role-tab-active):not(.active) {
+      background: transparent !important;
+    }
+    
+    button:not([class*="bg-white"]):not(.tab-btn-active):not(.role-tab-active):not(.active):active,
+    button:not([class*="bg-white"]):not(.tab-btn-active):not(.role-tab-active):not(.active):focus {
+      background: rgba(255,255,255,0.15) !important;
+      color: rgba(226, 13, 13, 0.9) !important;
+    }
+    button[class*="bg-white"]{
+      color:#08adff;
+    }
+    
+    /* Hide any problematic white elements that might show up */
+    div:empty {
+      background: transparent !important;
+    }
+    
+    /* Ensure export button stays hidden until needed */
+    #exportBtn {
+      background: rgba(255,255,255,0.1) !important;
+      color: white !important;
+      border: 1px solid rgba(255,255,255,0.2) !important;
+    }
+    
+    /* Fix all select dropdowns */
+    select {
+      background: rgba(15,23,42,0.9) !important;
+      color: white !important;
+      border: 1px solid rgba(255,255,255,0.2) !important;
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      appearance: none !important;
+    }
+    
+    /* Fix select dropdown options */
+    select option {
+      background: #1e293b !important;
+      color: white !important;
+      padding: 5px !important;
+    }
+    
+    /* Specific styling for state filter and other selects */
+    #stateFilter, #trendWindow, #trendStation, #forecastStation, #plannerStation {
+      background: rgba(15,23,42,0.9) !important;
+      color: white !important;
+      border: 1px solid rgba(255,255,255,0.2) !important;
+    }
+    
+    #stateFilter option, #trendWindow option, #trendStation option, 
+    #forecastStation option, #plannerStation option {
+      background: #1e293b !important;
+      color: white !important;
+    }
+    
+    /* Fix input fields too */
+    input {
+      background: rgba(15,23,42,0.7) !important;
+      color: white !important;
+      border: 1px solid rgba(255,255,255,0.2) !important;
+    }
+    
+    input::placeholder {
+      color: rgba(255,255,255,0.6) !important;
+    }
+    .glass {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+svg {
+  position: relative;
+  z-index: 0;
+}
+
+  </style>
+</head>
+<body class="min-h-full bg-gradient-to-br from-sky-900 via-indigo-900 to-emerald-900 text-white">
+<div class="w-full max-w-screen-xl mx-auto min-h-full flex flex-col px-4 sm:px-6 lg:px-8">
+
+    <!-- Header -->
+    <header class="p-5 pb-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <!-- Simple water drop SVG -->
+          <div class="p-2 rounded-xl bg-white/10 border border-white/20">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+              <path d="M12 2c2.5 4 7 7.5 7 12a7 7 0 1 1-14 0c0-4.5 4.5-8 7-12z" fill="url(#g)"/>
+              <defs>
+                <linearGradient id="g" x1="0" x2="24" y1="0" y2="24">
+                  <stop stop-color="#60A5FA"/><stop offset="1" stop-color="#34D399"/>
+                </linearGradient>
+              </defs>
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-xl font-extrabold tracking-tight">DWLR Groundwater</h1>
+            <p class="text-xs text-white/70">Real Time Evaluation</p>
+          </div>
+        </div>
+        <span id="clock" class="text-xs bg-white/10 px-2 py-1 rounded-md border border-white/20">--:--</span>
+      </div>
+
+      <!-- Role Switcher -->
+      <div class="mt-4 glass rounded-2xl p-1">
+        <div class="grid grid-cols-3 gap-1">
+          <button data-role="Researchers" class="role-tab active w-full py-2 rounded-xl text-sm font-semibold bg-white text-ink">Researchers</button>
+          <button data-role="Planners" class="role-tab w-full py-2 rounded-xl text-sm font-semibold text-white/90 hover:bg-white/10">Planners</button>
+          <button data-role="Policymakers" class="role-tab w-full py-2 rounded-xl text-sm font-semibold text-white/90 hover:bg-white/10">Policymakers</button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Tabs for views -->
+    <nav class="px-5">
+      <div class="flex gap-2 overflow-x-auto pb-2">
+        <button data-tab="list" class="tab-btn bg-white text-ink rounded-full px-4 py-2 text-sm font-semibold">Stations</button>
+        <button data-tab="map" class="tab-btn text-white/90 hover:bg-white/10 rounded-full px-4 py-2 text-sm font-semibold">Map</button>
+        <button data-tab="trends" class="tab-btn text-white/90 hover:bg-white/10 rounded-full px-4 py-2 text-sm font-semibold">Trends</button>
+        <button data-tab="forecast" class="tab-btn text-white/90 hover:bg-white/10 rounded-full px-4 py-2 text-sm font-semibold">Forecast</button>
+        <button data-tab="alerts" class="tab-btn text-white/90 hover:bg-white/10 rounded-full px-4 py-2 text-sm font-semibold">Alerts</button>
+        <button data-tab="tools" class="tab-btn text-white/90 hover:bg-white/10 rounded-full px-4 py-2 text-sm font-semibold">Tools</button>
+      </div>
+    </nav>
+
+    <!-- Content -->
+    <main class="flex-1 px-5 pb-6 space-y-4">
+      <!-- Role Badge -->
+      <div id="roleBadge" class="glass rounded-2xl p-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span id="roleIcon" class="status-dot" style="background:#60A5FA"></span>
+          <div>
+            <p id="roleTitle" class="text-sm font-semibold">Researchers Dashboard</p>
+            <p id="roleHint" class="text-xs text-white/70">Export data, review anomalies, validate trends</p>
+          </div>
+        </div>
+        <button id="exportBtn" class="hidden bg-white/10 border border-white/20 text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-white/20">Export CSV</button>
+      </div>
+
+      <!-- Stations List -->
+      <section id="view-list" class="glass rounded-2xl p-4 space-y-3">
+        <div class="flex items-center gap-2 justify-between">
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm font-bold">DWLR Stations</h2>
+            <span id="stationCount" class="text-xs text-white/70">0 active</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-white/70">Filter</label>
+            <select id="stateFilter" class="bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs">
+              <option value="all">All States</option>
+            </select>
+          </div>
+        </div>
+
+        <div id="stationList" class="space-y-2 max-h-[360px] overflow-auto pr-1"></div>
+      </section>
+
+      <!-- Map View -->
+      <section id="view-map" class="hidden glass rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold">India Map (Demo)</h2>
+          <div id="mapLegend" class="flex items-center gap-3 text-xs">
+            <span><span class="status-dot" style="background:var(--safe)"></span> Safe</span>
+            <span><span class="status-dot" style="background:var(--moderate)"></span> Moderate</span>
+            <span><span class="status-dot" style="background:var(--critical)"></span> Critical</span>
+          </div>
+        </div>
+        <div class="rounded-xl overflow-hidden border border-white/20">
+          <!-- Simple India bounds projection: lat 8–37, lon 68–97 into viewBox -->
+          <svg id="indiaMap" viewBox="0 0 320 420" class="w-full h-[360px] bg-gradient-to-b from-slate-900/40 to-slate-900/20">
+            <!-- Decorative soft blob as India backdrop -->
+            <defs>
+              <radialGradient id="mgrad" cx="50%" cy="40%" r="70%">
+                <stop offset="0%" stop-color="#1f2937"/>
+                <stop offset="100%" stop-color="#0f172a"/>
+              </radialGradient>
+              <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="18"/>
+              </filter>
+            </defs>
+            <rect x="0" y="0" width="320" height="420" fill="url(#mgrad)"/>
+            <g opacity="0.25" filter="url(#soft)">
+              <path d="M70,60 C120,10 210,30 260,90 C300,140 300,230 250,280 C210,320 130,350 90,320 C40,280 20,200 40,140 C50,110 50,80 70,60 Z" fill="#60a5fa"/>
+            </g>
+            <g id="mapPins"></g>
+          </svg>
+        </div>
+        <p class="text-[11px] text-white/60">Note: This is a stylized demo map with approximate positioning for prototype purposes.</p>
+      </section>
+
+      <!-- Trends View -->
+      <section id="view-trends" class="hidden glass rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold">Trends & Recharge Highlights</h2>
+          <select id="trendWindow" class="bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs">
+            <option value="7">7 days</option>
+            <option value="30">30 days</option>
+            <option value="90">90 days</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <span>Station:</span>
+          <select id="trendStation" class="bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs"></select>
+          <span id="trendStatus" class="ml-auto px-2 py-1 rounded-md border border-white/20 bg-white/10">Status</span>
+        </div>
+        <div class="rounded-xl overflow-hidden border border-white/20">
+          <svg id="trendChart" viewBox="0 0 320 180" class="w-full h-[180px] bg-slate-900/30"></svg>
+        </div>
+        <div id="rechargeNotes" class="text-xs text-white/80"></div>
+      </section>
+
+      <!-- Forecast View -->
+      <section id="view-forecast" class="hidden glass rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold">Short-term Forecast</h2>
+          <div class="flex items-center gap-2 text-xs">
+            <span>Station:</span>
+            <select id="forecastStation" class="bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs"></select>
+          </div>
+        </div>
+        <div class="rounded-xl overflow-hidden border border-white/20">
+          <svg id="forecastChart" viewBox="0 0 320 180" class="w-full h-[180px] bg-slate-900/30"></svg>
+        </div>
+        <div id="forecastSummary" class="text-xs text-white/80"></div>
+      </section>
+
+      <!-- Alerts View -->
+      <section id="view-alerts" class="hidden glass rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-bold">Alerts & Anomalies</h2>
+          <button id="ackAll" class="bg-white/10 border border-white/20 text-white rounded-lg px-3 py-1.5 text-xs font-semibold hover:bg-white/20">Acknowledge all</button>
+        </div>
+        <div id="alertList" class="space-y-2 max-h-[260px] overflow-auto pr-1"></div>
+        <div class="text-[11px] text-white/60">
+          Demo: Alerts trigger on critical status, sharp spikes/drops, and flatlines.
+        </div>
+      </section>
+
+      <!-- Tools (Role-aware) -->
+      <section id="view-tools" class="hidden space-y-4">
+        <!-- Researcher Tools -->
+        <div id="tools-researchers" class="glass rounded-2xl p-4 space-y-3">
+          <h2 class="text-sm font-bold">Researcher Tools</h2>
+          <div class="flex flex-wrap gap-2">
+            <button id="btnExportCSV" class="bg-white/10 border border-white/20 text-white rounded-lg px-3 py-2 text-xs font-semibold hover:bg-white/20">Export CSV</button>
+            <button id="btnExportJSON" class="bg-white/20 border border-white/20 rounded-lg px-3 py-2 text-xs font-semibold">Export JSON</button>
+            <button id="btnFindAnomalies" class="bg-white/20 border border-white/20 rounded-lg px-3 py-2 text-xs font-semibold">Review Anomalies</button>
+          </div>
+          <div id="anomalyPanel" class="hidden rounded-lg bg-white/5 border border-white/20 p-3 text-xs"></div>
+        </div>
+
+        <!-- Planner Tools -->
+        <div id="tools-planners" class="hidden glass rounded-2xl p-4 space-y-3">
+          <h2 class="text-sm font-bold">Planner Tools</h2>
+          <div class="grid grid-cols-2 gap-3 text-xs">
+            <label class="space-y-1 col-span-2">
+              <span>Select Station</span>
+              <select id="plannerStation" class="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs"></select>
+            </label>
+            <label class="space-y-1">
+              <span>Daily demand (MLD)</span>
+              <input id="plannerDemand" type="number" class="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1" placeholder="100">
+            </label>
+            <label class="space-y-1">
+              <span>Recharge boost (%)</span>
+              <input id="plannerBoost" type="number" class="w-full bg-white/10 border border-white/20 rounded-lg px-2 py-1" placeholder="10">
+            </label>
+          </div>
+          <button id="plannerSim" class="bg-white text-ink rounded-lg px-3 py-2 text-xs font-semibold">Simulate impact</button>
+          <div id="plannerResult" class="text-xs text-white/80"></div>
+        </div>
+
+        <!-- Policy Tools -->
+        <div id="tools-policymakers" class="hidden glass rounded-2xl p-4 space-y-3">
+          <h2 class="text-sm font-bold">Policy Dashboard</h2>
+          <div id="policyList" class="space-y-2"></div>
+          <div class="text-[11px] text-white/70">Sustainability Index (0–100) is computed from recent trend, variability, and current status.</div>
+        </div>
+      </section>
+
+      <!-- Station Detail Drawer -->
+      <section id="detailDrawer" class="hidden fade-in glass rounded-2xl p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 id="detailName" class="text-base font-bold"></h3>
+            <p id="detailMeta" class="text-xs text-white/70"></p>
+          </div>
+          <button id="closeDetail" class="text-xs bg-white/10 border border-white/20 rounded-lg px-2 py-1">Close</button>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <span id="detailStatus" class="px-2 py-1 rounded-md border border-white/20 bg-white/10">Status</span>
+          <span id="detailLast" class="text-white/70">Updated --</span>
+        </div>
+        <div class="rounded-xl overflow-hidden border border-white/20">
+          <svg id="detailChart" viewBox="0 0 320 160" class="w-full h-[160px] bg-slate-900/30"></svg>
+        </div>
+      </section>
+
+      <footer class="text-center text-white/70 text-xs py-4 mt-10 border-t border-white/10">
+  Built for groundwater insight • Planner-ready • Researcher-validated<br>
+  <span class="text-blue-400 font-semibold">@adapter</span> connected • <span class="text-green-400">Live simulation</span> enabled • <span class="text-red-400"></span> active
+</footer>
+
+    </main>
+  </div>
+
+  <script>
+    // ------------------------------
+    // Real Station Data Loading + Processing
+    // ------------------------------
+    const stateList = ["Gujarat", "Maharashtra", "Rajasthan", "Tamil Nadu", "Karnataka", "Uttar Pradesh", "Bihar", "Madhya Pradesh"];
+    // India bounds for rough pin placement
+    const LAT_MIN = 8, LAT_MAX = 37, LON_MIN = 68, LON_MAX = 97;
+
+    function rnd(min, max) { return Math.random() * (max - min) + min; }
+    function pick(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+    function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+
+    // Initialize empty stations array - will be populated from real station data
+    let stations = [];
+    let realStationsData = [];
+
+    // Load real station data from data.json
+   async function loadRealStationData() {
+  try {
+    const response = await fetch('data.json');
+    const jsonData = await response.json();
+
+    const rawStations = jsonData.Table; // ✅ Access the array inside the object
+
+    if (!Array.isArray(rawStations)) {
+      throw new Error("CGWB data format is invalid");
+    }
+
+  const installedStations = rawStations
+  .filter(s =>
+    s.Station_Status === 'INSTALLED' &&
+    s.Latitude && s.Longitude && s.State_Name
+  )
+  .slice(0, 2000); // ✅ Load only first 50 stations
+
+
+    stations = installedStations.map((s, i) => {
+      const id = `CGWB${i+1}`;
+      const base = 5.0 + rnd(-1.5, 1.5);
+      const readings = generateSyntheticReadings(base);
+
+      return {
+        id,
+        name: s.Station_Name,
+        state: s.State_Name,
+        district: s.District_Name,
+        tahsil: s.Tahsil_Name,
+        agency: s.Agency_Name,
+        lat: parseFloat(s.Latitude),
+        lon: parseFloat(s.Longitude),
+        stationType: s.Station_Type,
+        base,
+        readings,
+        lastUpdate: Date.now()
+      };
+    });
+
+    console.log(`Loaded ${stations.length} CGWB stations`); 
+    initializeUI();
+  } catch (err) {
+    console.error('Failed to load CGWB data:', err);
+    createFallbackStations();
+    initializeUI();
+  }
+}
+
+
+    // Load CSV data and merge with station data
+    async function loadGroundwaterData() {
+      try {
+        const response = await fetch('groundwater.csv');
+        const csvText = await response.text();
+        const lines = csvText.trim().split('\n');
+        
+        if (lines.length > 1) {
+          const dataPoints = [];
+          for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',');
+            if (values.length >= 6) {
+              const date = new Date(values[0]);
+              if (!isNaN(date.getTime())) {
+                dataPoints.push({
+                  t: date.getTime(),
+                  level: parseFloat(values[1]) || 2.0,
+                  temperature: parseFloat(values[2]) || 1.0,
+                  rain: parseFloat(values[3]) || 0,
+                  pH: parseFloat(values[4]) || 7.0,
+                  dissolvedOxygen: parseFloat(values[5]) || 8.0
+                });
+              }
+            }
+          }
+          
+          if (dataPoints.length > 0 && stations.length > 0) {
+            // Merge CSV data with first station
+            dataPoints.sort((a, b) => a.t - b.t);
+            stations[0].readings = dataPoints;
+            stations[0].name += " (Real Data)";
+            console.log(`Integrated ${dataPoints.length} real measurements`);
+          }
+        }
+      } catch (error) {
+        console.log('CSV data not found, using synthetic data only');
+      }
+    }
+
+    function generateSyntheticReadings(base) {
+  const readings = [];
+  let level = base + rnd(-0.5, 0.5);
+  const now = Date.now();
+  for (let d = 30; d >= 0; d--) {
+    const t = now - d * 24 * 60 * 60 * 1000;
+    const rain = Math.random() < 0.1 ? rnd(5, 50) : 0;
+    if (rain > 0) level -= rnd(0.1, 0.5);
+    level += rnd(-0.1, 0.1);
+    level = clamp(level, 1, 40);
+    readings.push({ t, level: +level.toFixed(2), rain: +rain.toFixed(1) });
+  }
+  return readings;
+}
+
+
+    // Fallback demo data if real data fails to load
+    function createFallbackStations() {
+      stations = Array.from({length: 8}).map((_, i) => {
+        const lat = rnd(10, 28) + i * 2;
+        const lon = rnd(70, 90) + (i%2)*4;
+        const base = rnd(5, 25);
+        const id = "STN"+(1000+i);
+        const state = stateList[i % stateList.length];
+        const readings = [];
+        let level = base + rnd(-2, 2);
+        const now = Date.now();
+        
+        for (let d = 120; d >= 0; d--) {
+          const t = now - d*60*60*1000;
+          level += rnd(-0.25, 0.25);
+          level = clamp(level, 1, 40);
+          const rain = Math.random() < 0.05 ? rnd(5, 40) : 0;
+          if (rain > 0) { level -= rnd(0.5, 1.5); }
+          readings.push({ t, level: +level.toFixed(2), rain: +rain.toFixed(1) });
+        }
+        return { id, name: "Station " + (i+1), state, lat, lon, base, readings, lastUpdate: now };
+      });
+    }
+
+    // Thresholds: m bgl where lower is "better" (closer to 0); here we invert semantics for clarity
+    function statusFor(level, base) {
+      // Compare to baseline: if much deeper than base -> critical
+      const delta = level - base;
+      if (delta >= 6) return "Critical";
+      if (delta >= 2.5) return "Moderate";
+      return "Safe";
+    }
+    function colorForStatus(s) {
+      return s === "Safe" ? "var(--safe)" : s === "Moderate" ? "var(--moderate)" : "var(--critical)";
+    }
+
+    // These will be populated after data loads
+    const stateFilter = document.getElementById('stateFilter');
+    
+    // Function to populate dropdowns after stations data is loaded
+    function populateDropdowns() {
+      // Clear existing options (except "All States")
+      while (stateFilter.children.length > 1) {
+        stateFilter.removeChild(stateFilter.lastChild);
+      }
+      
+      // Populate state filter with actual states from loaded data
+      const uniqueStates = [...new Set(stations.map(s => s.state))].sort();
+      uniqueStates.forEach(state => {
+        const opt = document.createElement('option');
+        opt.value = state;
+        opt.textContent = state;
+        stateFilter.appendChild(opt);
+      });
+
+      // Populate other selects
+      const selectsToFill = ['trendStation','forecastStation','plannerStation'];
+      selectsToFill.forEach(id => {
+        const sel = document.getElementById(id);
+        sel.innerHTML = ''; // Clear existing options
+        stations.forEach(s => {
+          const o = document.createElement('option');
+          o.value = s.id; 
+          o.textContent = `${s.name} • ${s.state}`;
+          sel.appendChild(o);
+        });
+      });
+    }
+
+    // ------------------------------
+    // Rendering Helpers
+    // ------------------------------
+    function fmtTime(ts) { const d = new Date(ts); return d.toLocaleString(); }
+    function fmtShort(ts) { const d = new Date(ts); return d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}); }
+    function tinySpark(values, width=88, height=28, color="#fff") {
+      if (!values.length) return '';
+      const min = Math.min(...values), max = Math.max(...values);
+      const dx = values.length > 1 ? (width/(values.length-1)) : width;
+      const path = values.map((v,i) => {
+        const x = i*dx;
+        const y = height - ((v - min) / (max - min || 1)) * height;
+        return `${i?'L':'M'}${x.toFixed(1)},${y.toFixed(1)}`;
+      }).join(' ');
+      return `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+        <path d="${path}" fill="none" stroke="${color}" stroke-width="2" />
+      </svg>`;
+    }
+
+    function drawLineChart(svg, points, opts = {}) {
+      
+      const w = +svg.getAttribute('viewBox').split(' ')[2];
+      const h = +svg.getAttribute('viewBox').split(' ')[3];
+      svg.innerHTML = '';
+      if (!points.length) return;
+
+      const xs = points.map(p=>p.t), ys = points.map(p=>p.level);
+      const minX = Math.min(...xs), maxX = Math.max(...xs);
+      const minY = Math.min(...ys), maxY = Math.max(...ys);
+      const pad = 10;
+
+      const x = t => pad + ( (t - minX) / (maxX - minX || 1) ) * (w - pad*2);
+      const y = v => (h - pad) - ( (v - minY) / (maxY - minY || 1) ) * (h - pad*2);
+
+      // Grid
+      const grid = document.createElementNS('http://www.w3.org/2000/svg','g');
+      grid.setAttribute('opacity','0.25');
+      for (let i=0;i<4;i++){
+        const ly = y(minY + (i*(maxY-minY)/3));
+        const line = document.createElementNS('http://www.w3.org/2000/svg','line');
+        line.setAttribute('x1', pad); line.setAttribute('x2', w - pad);
+        line.setAttribute('y1', ly); line.setAttribute('y2', ly);
+        line.setAttribute('stroke', '#94a3b8');
+        line.setAttribute('stroke-dasharray', '2,4');
+        grid.appendChild(line);
+      }
+      svg.appendChild(grid);
+
+      // Path
+      const d = points.map((p, i) => `${i?'L':'M'}${x(p.t)},${y(p.level)}`).join(' ');
+      const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+      path.setAttribute('d', d);
+      path.setAttribute('fill','none');
+      path.setAttribute('stroke','#fff');
+      path.setAttribute('stroke-width','3');
+path.setAttribute('stroke-linecap','round');
+path.setAttribute('stroke-linejoin','round');
+
+      svg.appendChild(path);
+
+      // Recharge markers (rain > 0)
+      const rg = document.createElementNS('http://www.w3.org/2000/svg','g');
+      points.forEach(p=>{
+        if ((p.rain||0) > 0){
+          const cx = x(p.t), cy = y(p.level);
+          const c = document.createElementNS('http://www.w3.org/2000/svg','circle');
+          c.setAttribute('cx', cx); c.setAttribute('cy', cy);
+          c.setAttribute('r', '3');
+          c.setAttribute('fill', '#34d399');
+          c.setAttribute('opacity','0.9');
+          rg.appendChild(c);
+        }
+      });
+      svg.appendChild(rg);
+
+      // Tooltip (simple nearest)
+      const tip = document.createElementNS('http://www.w3.org/2000/svg','g');
+      tip.setAttribute('pointer-events', 'none');
+
+      const tipLine = document.createElementNS('http://www.w3.org/2000/svg','line');
+      tipLine.setAttribute('y1', pad); tipLine.setAttribute('y2', h-pad);
+      tipLine.setAttribute('stroke','#93c5fd'); tipLine.setAttribute('opacity','0.7'); tipLine.setAttribute('stroke-dasharray','3,4');
+      const tipDot = document.createElementNS('http://www.w3.org/2000/svg','circle');
+      tipDot.setAttribute('r','4'); tipDot.setAttribute('fill','#93c5fd');
+      const tipBg = document.createElementNS('http://www.w3.org/2000/svg','rect');
+      const tipText = document.createElementNS('http://www.w3.org/2000/svg','text');
+      tipText.setAttribute('fill','#fff'); tipText.setAttribute('font-size','10');
+
+      tip.appendChild(tipLine); tip.appendChild(tipDot); tip.appendChild(tipBg); tip.appendChild(tipText);
+      svg.appendChild(tip);
+
+      function showTip(clientX){
+        const rect = svg.getBoundingClientRect();
+        const mx = clientX - rect.left;
+        // invert x to timestamp
+        const tGuess = minX + ((mx - pad) / (w - pad*2)) * (maxX - minX);
+        let idx = 0, best = Infinity;
+        points.forEach((p,i)=>{
+          const dx = Math.abs(p.t - tGuess);
+          if (dx < best){ best = dx; idx = i; }
+        });
+        const p = points[idx];
+        const tx = x(p.t), ty = y(p.level);
+        tipLine.setAttribute('x1', tx); tipLine.setAttribute('x2', tx);
+        tipDot.setAttribute('cx', tx); tipDot.setAttribute('cy', ty);
+
+        const label = `${fmtShort(p.t)} • ${p.level.toFixed(2)} m bgl${(p.rain||0)>0?` • rain ${p.rain}mm`:''}`;
+        tipText.textContent = label;
+        // position text bg
+        tipText.setAttribute('x', Math.min(tx+6, w-60)); tipText.setAttribute('y', Math.max(ty-8, 14));
+        const bbox = { w: label.length*5.2, h: 14 };
+        tipBg.setAttribute('x', Math.min(tx+4, w-62)); 
+        tipBg.setAttribute('y', Math.max(ty + 24, 2));
+
+        tipBg.setAttribute('height', bbox.h + 4);
+        
+        tipBg.setAttribute('width', bbox.w); tipBg.setAttribute('height', bbox.h);
+        tipBg.setAttribute('fill','rgba(15,23,42,0.8)');
+        tipBg.setAttribute('rx','4');
+      }
+      svg.onmousemove = (e)=> showTip(e.clientX);
+      svg.ontouchstart = (e)=> { if(e.touches[0]) showTip(e.touches[0].clientX); };
+      svg.ontouchmove = (e)=> { if(e.touches[0]) showTip(e.touches[0].clientX); };
+    }
+
+    // ------------------------------
+    // UI Rendering
+    // ------------------------------
+    const stationListEl = document.getElementById('stationList');
+    const stationCountEl = document.getElementById('stationCount');
+
+    function renderStationRow(s){
+      const last = s.readings[s.readings.length-1];
+      const status = statusFor(last.level, s.base);
+      const color = colorForStatus(status);
+      const levels = s.readings.slice(-20).map(r=>r.level);
+      const row = document.createElement('div');
+      row.className = "rounded-xl border border-white/20 bg-white/5 hover:bg-white/10 transition p-3";
+      row.setAttribute('data-id', s.id);
+      
+      // Enhanced display with real station info
+      const locationInfo = s.district ? `${s.district}, ${s.state}` : s.state;
+      const stationTypeIcon = s.stationType === 'GROUND' ? '🌍' : '🌊';
+      
+      row.innerHTML = `
+        <div class="flex items-center justify-between gap-3">
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="status-dot" style="background:${color}"></span>
+              <p class="font-semibold text-sm truncate">${s.name}</p>
+              <span class="text-xs">${stationTypeIcon}</span>
+            </div>
+            <p class="text-xs text-white/70">${locationInfo} • ${fmtShort(last.t)} • ${last.level.toFixed(2)} m bgl</p>
+            ${s.agency ? `<p class="text-[10px] text-white/50">${s.agency}</p>` : ''}
+          </div>
+          <div class="hidden sm:block">${tinySpark(levels, 96, 28, '#93c5fd')}</div>
+          <span class="text-[11px] px-2 py-1 rounded-md border border-white/20" style="background: ${color}22; color: ${color};">${status}</span>
+        </div>
+      `;
+      row.onclick = () => openDetail(s.id);
+      return row;
+    }
+
+    function renderStationList(){
+      const filter = stateFilter.value;
+      stationListEl.innerHTML = '';
+      const list = stations.filter(s => filter==='all' || s.state===filter);
+      list.forEach(s => stationListEl.appendChild(renderStationRow(s)));
+      stationCountEl.textContent = `${list.length} active`;
+    }
+    stateFilter.onchange = renderStationList;
+
+    // Map pins
+    function project(lat, lon){
+      // map to 320x420 viewbox; add margins
+      const x = ( (lon - LON_MIN) / (LON_MAX - LON_MIN) ) * 280 + 20;
+      const y = ( 1 - (lat - LAT_MIN) / (LAT_MAX - LAT_MIN) ) * 360 + 30;
+      return {x, y};
+    }
+    function renderMap(){
+      const g = document.getElementById('mapPins');
+g.innerHTML = '';
+
+// ✅ Group stations: max 3 per state
+const grouped = {};
+stations.forEach(s => {
+  if (!grouped[s.state]) grouped[s.state] = [];
+  if (grouped[s.state].length < 3) grouped[s.state].push(s);
+});
+const visibleStations = Object.values(grouped).flat();
+
+visibleStations.forEach((s, i) => {
+  const last = s.readings[s.readings.length - 1];
+  const status = statusFor(last.level, s.base);
+  const { x, y } = project(s.lat, s.lon);
+
+  const offset = i % 3 * 4;
+
+  const node = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  node.setAttribute('cursor', 'pointer');
+  node.addEventListener('click', () => openDetail(s.id));
+
+  const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+  c.setAttribute('cx', x + offset);
+  c.setAttribute('cy', y);
+  c.setAttribute('r', 6);
+  c.setAttribute('fill', colorForStatus(status));
+  c.setAttribute('stroke', '#0f172a');
+  c.setAttribute('stroke-width', '1.5');
+
+  const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  t.setAttribute('x', x + 8 + offset);
+  t.setAttribute('y', y + 4);
+  t.setAttribute('fill', '#e5e7eb');
+  t.setAttribute('font-size', '10');
+
+  const shortName = s.name.length > 20 ? s.name.slice(0, 20) + '…' : s.name;
+  t.textContent = shortName.replace('Station ', 'S');
+
+  node.appendChild(c);
+  node.appendChild(t);
+  g.appendChild(node);
+});
+
+    }
+
+    // Trends
+    const trendStationSel = document.getElementById('trendStation');
+    const trendWindowSel = document.getElementById('trendWindow');
+    const trendChart = document.getElementById('trendChart');
+    const trendStatus = document.getElementById('trendStatus');
+    const rechargeNotes = document.getElementById('rechargeNotes');
+    function renderTrends(){
+      const id = trendStationSel.value || stations[0].id;
+      const win = +trendWindowSel.value;
+      const st = stations.find(s=>s.id===id) || stations[0];
+      const points = st.readings.slice(-win);
+      drawLineChart(trendChart, points);
+      const last = points[points.length-1];
+      const stt = statusFor(last.level, st.base);
+      trendStatus.textContent = `${stt} • ${last.level.toFixed(2)} m bgl`;
+      trendStatus.style.color = colorForStatus(stt);
+      trendStatus.style.borderColor = colorForStatus(stt) + "55";
+      // recharge highlights: consecutive decrease in m bgl after rainfall
+      const notes = [];
+      for (let i=1;i<points.length;i++){
+        const prev = points[i-1], cur = points[i];
+        const drop = prev.level - cur.level; // drop in m bgl = rise in water
+        if ((cur.rain||0)>0 && drop > 0.3) {
+          notes.push(`Recharge event around ${new Date(cur.t).toLocaleDateString()} (↓${drop.toFixed(2)} m after ${cur.rain}mm rain)`);
+        }
+      }
+      rechargeNotes.innerHTML = notes.length ? `<ul class="list-disc pl-5">${notes.slice(-3).map(n=>`<li>${n}</li>`).join('')}</ul>` : 'No recent recharge events detected in this window.';
+    }
+    trendStationSel.onchange = renderTrends;
+    trendWindowSel.onchange = renderTrends;
+
+    // Forecast
+    const forecastStationSel = document.getElementById('forecastStation');
+    const forecastChart = document.getElementById('forecastChart');
+    const forecastSummary = document.getElementById('forecastSummary');
+    function renderForecast(){
+      const id = forecastStationSel.value || stations[0].id;
+      const st = stations.find(s=>s.id===id) || stations[0];
+      const hist = st.readings.slice(-24); // last 24 hours
+      if (hist.length < 2) return;
+      // simple trend: linear regression (least squares)
+      const xs = hist.map((p,i)=>i), ys = hist.map(p=>p.level);
+      const n = xs.length;
+      const sumX = xs.reduce((a,b)=>a+b,0), sumY = ys.reduce((a,b)=>a+b,0);
+      const sumXY = xs.reduce((a,x,i)=>a+x*ys[i],0);
+      const sumXX = xs.reduce((a,x)=>a+x*x,0);
+      const slope = (n*sumXY - sumX*sumY) / (n*sumXX - sumX*sumX || 1);
+      const intercept = (sumY - slope*sumX) / n;
+      const future = Array.from({length: 12}).map((_,i)=>({ t: Date.now() + (i+1)*60*60*1000, level: intercept + slope*(n+i) }));
+      const points = hist.concat(future);
+      // draw
+      const svgPoints = points.map(p=>({ t: p.t || Date.now(), level: p.level, rain: 0 }));
+      drawLineChart(forecastChart, svgPoints);
+      // summary
+      const last = hist[hist.length-1].level;
+      const next6h = future[5].level;
+      const dir = next6h - last;
+      const stt = statusFor(last, st.base);
+      const projected = statusFor(next6h, st.base);
+      forecastSummary.innerHTML = `
+        Current: <b>${last.toFixed(2)} m</b> (${stt}). Next 6h: <b>${next6h.toFixed(2)} m</b> (${projected}).
+        Trend: <span style="color:${dir<0?'#34d399':'#ef4444'}">${dir<0?'rising (improving)':'falling (worsening)'}.</span>
+      `;
+    }
+    forecastStationSel.onchange = renderForecast;
+
+    // Alerts
+    const alertList = document.getElementById('alertList');
+    const ackAll = document.getElementById('ackAll');
+    let alerts = [];
+    function pushAlert(type, s, detail){
+      const id = `${type}-${s.id}-${Date.now()}`;
+      alerts.unshift({ id, type, station: s.name, state: s.state, time: Date.now(), detail });
+      renderAlerts();
+    }
+    function renderAlerts(){
+      alertList.innerHTML = '';
+      if (!alerts.length) {
+        alertList.innerHTML = `<div class="text-xs text-white/70">No active alerts.</div>`;
+        return;
+      }
+      alerts.slice(0, 20).forEach(a=>{
+        const color = a.type==='Critical' ? 'var(--critical)' : a.type==='Anomaly' ? '#60a5fa' : 'var(--moderate)';
+        const card = document.createElement('div');
+        card.className = "rounded-lg border border-white/20 bg-white/5 p-3";
+        card.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="status-dot" style="background:${color}"></span>
+                <p class="text-sm font-semibold truncate">${a.type}</p>
+              </div>
+              <p class="text-xs text-white/70 truncate">${a.station} • ${a.state} • ${new Date(a.time).toLocaleString()}</p>
+              <p class="text-xs mt-1">${a.detail}</p>
+            </div>
+            <button class="text-xs bg-white/10 border border-white/20 rounded-md px-2 py-1" data-id="${a.id}">Dismiss</button>
+          </div>
+        `;
+        card.querySelector('button').onclick = (e)=>{
+          const id = e.currentTarget.getAttribute('data-id');
+          alerts = alerts.filter(x=>x.id!==id);
+          renderAlerts();
+        };
+        alertList.appendChild(card);
+      });
+    }
+    ackAll.onclick = ()=>{ alerts = []; renderAlerts(); };
+
+    // Role handling
+    const roleTabs = document.querySelectorAll('.role-tab');
+    const roleTitle = document.getElementById('roleTitle');
+    const roleHint = document.getElementById('roleHint');
+    const roleIcon = document.getElementById('roleIcon');
+    const exportBtn = document.getElementById('exportBtn');
+    const toolsResearchers = document.getElementById('tools-researchers');
+    const toolsPlanners = document.getElementById('tools-planners');
+    const toolsPolicymakers = document.getElementById('tools-policymakers');
+
+    function setRole(role){
+      roleTabs.forEach(b=>{
+        const active = b.getAttribute('data-role')===role;
+        b.classList.remove('role-tab-active');
+        if (active) {
+          b.className = "role-tab role-tab-active w-full py-2 rounded-xl text-sm font-semibold bg-white text-ink";
+          b.classList.add('role-tab-active');
+        } else {
+          b.className = "role-tab w-full py-2 rounded-xl text-sm font-semibold text-white/90 hover:bg-white/10";
+        }
+      });
+      if (role==='Researchers'){
+        roleTitle.textContent = 'Researchers Dashboard';
+        roleHint.textContent = 'Export data, anomaly review, validate trends';
+        roleIcon.style.background = '#60A5FA';
+        exportBtn.classList.remove('hidden');
+        toolsResearchers.classList.remove('hidden');
+        toolsPlanners.classList.add('hidden');
+        toolsPolicymakers.classList.add('hidden');
+      } else if (role==='Planners'){
+        roleTitle.textContent = 'Planners Dashboard';
+        roleHint.textContent = 'Recharge zones & simple water budgeting';
+        roleIcon.style.background = '#F59E0B';
+        exportBtn.classList.add('hidden');
+        toolsResearchers.classList.add('hidden');
+        toolsPlanners.classList.remove('hidden');
+        toolsPolicymakers.classList.add('hidden');
+      } else {
+        roleTitle.textContent = 'Policymakers Dashboard';
+        roleHint.textContent = 'Sustainability index & summaries';
+        roleIcon.style.background = '#34D399';
+        exportBtn.classList.add('hidden');
+        toolsResearchers.classList.add('hidden');
+        toolsPlanners.classList.add('hidden');
+        toolsPolicymakers.classList.remove('hidden');
+        renderPolicy();
+      }
+    }
+    roleTabs.forEach(b=> {
+      b.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setRole(b.getAttribute('data-role'));
+      };
+      
+      // Add additional event listeners to prevent white flash
+      b.addEventListener('mousedown', (e) => {
+        if (!b.classList.contains('role-tab-active') && !b.classList.contains('active')) {
+          e.preventDefault();
+          b.style.background = 'rgba(255,255,255,0.15)';
+          b.style.color = 'white';
+        }
+      });
+      
+      b.addEventListener('mouseup', (e) => {
+        if (!b.classList.contains('role-tab-active') && !b.classList.contains('active')) {
+          setTimeout(() => {
+            b.style.background = '';
+            b.style.color = '';
+          }, 100);
+        }
+      });
+    });
+
+    // Tabs handling
+    const tabs = document.querySelectorAll('.tab-btn');
+    const views = {
+      list: document.getElementById('view-list'),
+      map: document.getElementById('view-map'),
+      trends: document.getElementById('view-trends'),
+      forecast: document.getElementById('view-forecast'),
+      alerts: document.getElementById('view-alerts'),
+      tools: document.getElementById('view-tools'),
+    };
+    function setTab(name){
+      tabs.forEach(t => {
+        t.classList.remove('tab-btn-active');
+        const isActive = t.getAttribute('data-tab') === name;
+        if (isActive) {
+          t.className = 'tab-btn tab-btn-active rounded-full px-4 py-2 text-sm font-semibold bg-white text-ink';
+          t.classList.add('tab-btn-active');
+        } else {
+          t.className = 'tab-btn rounded-full px-4 py-2 text-sm font-semibold text-white/90 hover:bg-white/10';
+        }
+      });
+      Object.entries(views).forEach(([k, el]) => {
+        if (k===name) el.classList.remove('hidden'); else el.classList.add('hidden');
+      });
+    }
+    document.querySelectorAll('.tab-btn').forEach(b => {
+      b.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setTab(b.getAttribute('data-tab'));
+      };
+      
+      // Add additional event listeners to prevent white flash
+      b.addEventListener('mousedown', (e) => {
+        if (!b.classList.contains('tab-btn-active')) {
+          e.preventDefault();
+          b.style.background = 'rgba(255,255,255,0.15)';
+          b.style.color = 'white';
+        }
+      });
+      
+      b.addEventListener('mouseup', (e) => {
+        if (!b.classList.contains('tab-btn-active')) {
+          setTimeout(() => {
+            b.style.background = '';
+            b.style.color = '';
+          }, 100);
+        }
+      });
+    });
+
+    // Detail drawer
+    const detailDrawer = document.getElementById('detailDrawer');
+    const detailName = document.getElementById('detailName');
+    const detailMeta = document.getElementById('detailMeta');
+    const detailStatus = document.getElementById('detailStatus');
+    const detailLast = document.getElementById('detailLast');
+    const detailChart = document.getElementById('detailChart');
+    const closeDetail = document.getElementById('closeDetail');
+    let currentDetailId = null;
+
+    function openDetail(id){
+      const s = stations.find(x=>x.id===id);
+      if (!s) return;
+      currentDetailId = id;
+      detailName.textContent = `${s.name} • ${s.state}`;
+      const last = s.readings[s.readings.length-1];
+      detailMeta.textContent = `Baseline ${s.base.toFixed(1)} m bgl`;
+      const stt = statusFor(last.level, s.base);
+      detailStatus.textContent = `${stt}`;
+      detailStatus.style.color = colorForStatus(stt);
+      detailStatus.style.borderColor = colorForStatus(stt) + "55";
+      detailLast.textContent = `Updated ${fmtTime(last.t)}`;
+      drawLineChart(detailChart, s.readings.slice(-60));
+      detailDrawer.classList.remove('hidden');
+      // focus scroll
+      detailDrawer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    closeDetail.onclick = ()=> detailDrawer.classList.add('hidden');
+
+    // Export
+    function exportCSV(){
+      const header = ['id','name','state','timestamp','level_m_bgl','rain_mm'];
+      const rows = [];
+      stations.forEach(s=>{
+        s.readings.forEach(r=>{
+          rows.push([s.id, s.name, s.state, new Date(r.t).toISOString(), r.level, r.rain||0].join(','));
+        });
+      });
+      const csv = header.join(',') + '\n' + rows.join('\n');
+      const blob = new Blob([csv], {type:'text/csv'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'dwlr_demo.csv';
+      a.click();
+      setTimeout(()=> URL.revokeObjectURL(url), 1000);
+    }
+    function exportJSON(){
+      const data = stations.map(s=>({ id:s.id, name:s.name, state:s.state, base:s.base, readings:s.readings }));
+      const blob = new Blob([JSON.stringify(data)], {type:'application/json'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'dwlr_demo.json';
+      a.click();
+      setTimeout(()=> URL.revokeObjectURL(url), 1000);
+    }
+    document.getElementById('btnExportCSV').onclick = exportCSV;
+    document.getElementById('btnExportJSON').onclick = exportJSON;
+    exportBtn.onclick = exportCSV;
+
+    // Researcher anomaly quick review
+    const anomalyPanel = document.getElementById('anomalyPanel');
+    document.getElementById('btnFindAnomalies').onclick = ()=>{
+      const items = [];
+      stations.forEach(s=>{
+        const r = s.readings.slice(-10);
+        // flatline detection
+        const unique = new Set(r.map(x=>x.level.toFixed(2))).size;
+        if (unique <= 2) items.push(`Flatline suspected at ${s.name} (last 10pts vary minimally).`);
+        // spike detection
+        for (let i=1;i<r.length;i++){
+          const diff = Math.abs(r[i].level - r[i-1].level);
+          if (diff > 2.0){
+            items.push(`Spike at ${s.name} around ${fmtTime(r[i].t)} (Δ ${diff.toFixed(2)} m).`);
+            break;
+          }
+        }
+      });
+      anomalyPanel.classList.remove('hidden');
+      anomalyPanel.innerHTML = items.length ? `<ul class="list-disc pl-5">${items.map(n=>`<li>${n}</li>`).join('')}</ul>` : 'No obvious anomalies right now.';
+    };
+
+    // Planner simulation
+    const plannerStationSel = document.getElementById('plannerStation');
+    const plannerDemand = document.getElementById('plannerDemand');
+    const plannerBoost = document.getElementById('plannerBoost');
+    const plannerResult = document.getElementById('plannerResult');
+    document.getElementById('plannerSim').onclick = ()=>{
+      const st = stations.find(s=>s.id===plannerStationSel.value) || stations[0];
+      const demand = parseFloat(plannerDemand.value||'100'); // MLD
+      const boost = parseFloat(plannerBoost.value||'10');   // %
+      const recent = st.readings.slice(-24);
+      const avgROC = recent.length>1 ? (recent[recent.length-1].level - recent[0].level) / recent.length : 0; // m/point
+      // Approximate: improvement reduces depth (good). Convert boost to negative ROC.
+      const improvedROC = avgROC - Math.abs(avgROC)* (boost/100) - (boost/1000);
+      const daysToCritical = (()=> {
+        const last = recent[recent.length-1].level;
+        const crit = st.base + 6;
+        if (improvedROC <= 0) return Infinity;
+        return Math.max(0, (crit - last) / improvedROC);
+      })();
+      const msg = `
+        With a ${boost}% recharge program and ${demand} MLD demand, projected trend improves to ${(improvedROC).toFixed(3)} m/step.
+        Estimated days until Critical band: ${daysToCritical===Infinity?'Not reaching critical in short term':daysToCritical.toFixed(0)+' days'}.
+      `;
+      plannerResult.textContent = msg;
+    };
+
+    // Policy dashboard
+    function sustainabilityIndexFor(station){
+      const r = station.readings.slice(-24);
+      const last = r[r.length-1].level;
+      const stt = statusFor(last, station.base);
+      const spread = Math.max(...r.map(x=>x.level)) - Math.min(...r.map(x=>x.level)); // variability
+      let score = 60;
+      score -= (stt==='Moderate')?15:(stt==='Critical'?35:0);
+      score -= spread*2;
+      return Math.round(clamp(score, 5, 95));
+    }
+    function renderPolicy(){
+      const byState = {};
+      stations.forEach(s=>{
+        const idx = sustainabilityIndexFor(s);
+        (byState[s.state] ||= []).push(idx);
+      });
+      const policyList = document.getElementById('policyList');
+      policyList.innerHTML = '';
+      Object.entries(byState).forEach(([state, arr])=>{
+        const avg = Math.round(arr.reduce((a,b)=>a+b,0)/arr.length);
+        const bar = document.createElement('div');
+        bar.className = "rounded-lg border border-white/20 bg-white/5 p-3";
+        bar.innerHTML = `
+          <div class="flex items-center justify-between">
+            <p class="text-sm font-semibold">${state}</p>
+            <span class="text-xs">${avg}/100</span>
+          </div>
+          <div class="mt-2 h-2 w-full bg-white/10 rounded-full overflow-hidden">
+            <div class="h-full" style="width:${avg}%; background:${avg>70?'#34d399':avg>40?'#f59e0b':'#ef4444'}"></div>
+          </div>
+          <p class="text-[11px] text-white/70 mt-1">Based on ${arr.length} station(s)</p>
+        `;
+        policyList.appendChild(bar);
+      });
+    }
+
+    // Simulation loop: new reading every 3s
+    function simulateTick(){
+      stations.forEach(s=>{
+        const last = s.readings[s.readings.length-1];
+        let level = last.level + rnd(-0.35, 0.35);
+        // occasional rainfall leading to recharge (decrease in m bgl)
+        const rain = Math.random() < 0.08 ? rnd(5, 60) : 0;
+        if (rain>0) level -= rnd(0.6, 1.6);
+        level = clamp(level, 1, 45);
+        const r = { t: Date.now(), level: +level.toFixed(2), rain: +rain.toFixed(1) };
+        s.readings.push(r);
+        if (s.readings.length > 240) s.readings.shift();
+        s.lastUpdate = r.t;
+
+        // Alerts: critical, spike, flatline
+        const stt = statusFor(level, s.base);
+        if (stt==='Critical' && Math.random()<0.4) {
+          pushAlert('Critical', s, `Depth ${level.toFixed(2)} m exceeds safe band at ${fmtShort(r.t)}.`);
+        }
+        const prev = s.readings[s.readings.length-2];
+        if (Math.abs(r.level - prev.level) > 2.2) {
+          pushAlert('Anomaly', s, `Sudden change Δ${Math.abs(r.level-prev.level).toFixed(2)} m.`);
+        }
+        const last10 = s.readings.slice(-10).map(x=>x.level.toFixed(2));
+        if (new Set(last10).size <= 2 && Math.random()<0.1) {
+          pushAlert('Sensor', s, `Flatline suspected in last 10 points.`);
+        }
+
+        // Selective updates: station list row
+        const row = stationListEl.querySelector(`[data-id="${s.id}"]`);
+        if (row){
+          const status = statusFor(level, s.base);
+          row.querySelector('p.text-xs.text-white\\/70').textContent = `${s.state} • Last ${fmtShort(r.t)} • ${level.toFixed(2)} m bgl`;
+          const badge = row.querySelector('span.text-\\[11px\\]');
+          badge.textContent = status;
+          const col = colorForStatus(status);
+          badge.style.color = col;
+          badge.style.background = col + '22';
+          badge.style.borderColor = 'rgba(255,255,255,0.2)';
+        }
+        // Update detail if open
+        if (currentDetailId === s.id){
+          const stt2 = statusFor(level, s.base);
+          detailStatus.textContent = stt2;
+          detailStatus.style.color = colorForStatus(stt2);
+          detailLast.textContent = `Updated ${fmtTime(r.t)}`;
+          drawLineChart(detailChart, s.readings.slice(-60));
+        }
+      });
+
+      // refresh map pins status color (minimal)
+      renderMap();
+      // refresh trends/forecast charts for selected stations
+      renderTrends();
+      renderForecast();
+    }
+
+    // Live clock
+    function tickClock(){
+      const d = new Date();
+      document.getElementById('clock').textContent = d.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    }
+
+    // Initialize UI after data loads
+    function initializeUI(){
+      if (stations.length === 0) return; // Wait for data to load
+      
+      // First populate all dropdowns with loaded data
+      populateDropdowns();
+      
+      renderStationList();
+      renderMap();
+      if (stations.length > 0) {
+        trendStationSel.value = stations[0].id;
+        forecastStationSel.value = stations[0].id;
+        plannerStationSel.value = stations[0].id;
+      }
+      renderTrends();
+      renderForecast();
+      renderAlerts();
+      setRole('Researchers');
+      setTab('list');
+      tickClock();
+      setInterval(tickClock, 1000);
+      setInterval(simulateTick, 15000); // slower updates for real data
+    }
+
+    // Initial render - load real data first
+    function init(){
+      loadRealStationData(); // This will call initializeUI() when done
+    }
+    init();
+
+    // -------------- Adapter Note --------------
+    // To plug in a real DWLR feed later:
+    // - Replace the "stations" array and simulateTick() with fetch() that updates station.readings
+    // - Keep the same shape: { id, name, state, base, lat, lon, readings:[{t, level, rain}] }
+    // This will preserve all UI behaviours without redesign.
+  </script>
+</body>
+</html>
